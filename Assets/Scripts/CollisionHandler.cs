@@ -4,30 +4,52 @@ using UnityEngine.SceneManagement;
 
 public class CollisionHandler : MonoBehaviour
 {
-    [SerializeField] private float sequenceDelay = 2;
+    [SerializeField] float sequenceDelay = 2;
+    [SerializeField] AudioClip crash;
+    [SerializeField] AudioClip success;
+
+    AudioSource audioSource;
+    
+    bool isControllable = true;
+
+    private void Start()
+    {
+        audioSource = GetComponent<AudioSource>();
+    }
     private void OnCollisionEnter(Collision other)
     {
-        switch (other.gameObject.tag)
+        if (isControllable)
         {
-            case "Friendly":
-                Debug.Log("Hit Friendly");
-                break;
-            case "Fuel":
-                Debug.Log("Hit Fuel");
-                break;
-            case "Finish":
-                StartSequence("LoadNextLevel");
-                break;
-            default:
-                StartSequence("ReloadLevel");
-                break;
+            switch (other.gameObject.tag)
+            {
+                case "Friendly":
+                    Debug.Log("Hit Friendly");
+                    break;
+                case "Fuel":
+                    Debug.Log("Hit Fuel");
+                    break;
+                case "Finish":
+                    StartSuccessSequence();
+                    break;
+                default:
+                    StartCrashSequence();
+                    break;
+            }
         }
     }
 
-    void StartSequence(string sequenceName)
+    void StartSuccessSequence()
     {
-        gameObject.GetComponent<Movement>().enabled = false;
-        Invoke(sequenceName, sequenceDelay);
+        DisableControls();
+        audioSource.PlayOneShot(success);
+        Invoke("LoadNextLevel", sequenceDelay);
+    }
+
+    void StartCrashSequence()
+    {
+        DisableControls();
+        audioSource.PlayOneShot(crash);
+        Invoke("ReloadLevel", sequenceDelay);
     }
 
     void LoadNextLevel()
@@ -44,6 +66,12 @@ public class CollisionHandler : MonoBehaviour
     {
         int currentScene = SceneManager.GetActiveScene().buildIndex;
         SceneManager.LoadScene(currentScene);
+    }
+
+    void DisableControls()
+    {
+        isControllable = false;
+        gameObject.GetComponent<Movement>().enabled = false;
     }
 
 
